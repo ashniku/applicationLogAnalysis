@@ -1,5 +1,5 @@
 # applicationLogAnalysis
-Provide a detailed report on the phases that took time and also will provide hints on the issue on that phase.
+Provides a detailed report on the phases that took time and also will provide hints on the issue on that phase.
 
 Follow below steps on MAC:
 
