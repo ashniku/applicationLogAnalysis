@@ -51,14 +51,16 @@ if [ -s "$isStartEmpty" ]; then
                    starttime=`fgrep -iw $startcont start.txt| awk '{print $1 " " $2}' | sed 's/......$//'|  head -n 1 ` #get the start time for all the phases. This will get the starttime for the First container on that phase
 
                    echo "Start Time :" $starttime
-                   totalStartCount=`fgrep -iw $startcont start.txt | wc -l|tr -d ' '` #Get the total count of containers started on each phase
+                   #totalStartCount=`fgrep -iw $startcont start.txt | wc -l|tr -d ' '` #Get the total count of containers started on each phase
+                   totalStartCount=`cat start.txt | fgrep -iw $startcont | awk '{print $4}'| cut -c 8- | sort | uniq| wc -l`
                    echo "Total Started $startcont: $totalStartCount"
                    echo
                    fincont=$startcont
                    
                    endtime=`fgrep -iw $fincont fin.txt| awk '{print $1 " " $2}' | sed 's/......$//'|tail -n 1 ` #get the end time for all the phases.This will get the endtime for the last container on that phase
                    echo "End Time :" $endtime
-                   totalEndCount=`fgrep -iw $fincont fin.txt | wc -l |tr -d ' '` #Get the total count of containers finished on each phase
+                   #totalEndCount=`fgrep -iw $fincont fin.txt | wc -l |tr -d ' '` #Get the total count of containers finished on each phase
+                   totalEndCount=`cat fin.txt | fgrep -iw $fincont | awk '{print $4}'| cut -c 8- | sort | uniq| wc -l` #Get the total count of containers finished on each phase
                    echo "Total Ended $fincont: $totalEndCount"
           
                    completedCount=$((totalStartCount - totalEndCount))
@@ -71,6 +73,7 @@ if [ -s "$isStartEmpty" ]; then
                    start_time=$(date -j -f "%Y-%m-%d %H:%M" "${starttime}" "+%s") #compute start time in MAC format
                    end_time=$(date -j -f "%Y-%m-%d %H:%M" "${endtime}" "+%s") #compute end time in MAC format
                    time_diff=$((end_time - start_time)) #Find the time difference 
+                   echo
                    echo "Time difference in seconds for ${fincont}: $time_diff"  
                    completedCount=$((totalStartCount - totalEndCount))
                    echo "$fincont $time_diff"  >> timetaken.txt
@@ -91,20 +94,20 @@ if [ -s "$isStartEmpty" ]; then
                    completedCount=$((totalStartCount - totalEndCount))
                     echo "$fincont $time_diff"  >> timetaken.txt
                     echo "$fincont phase is not complete"
-                    if echo $fincont | grep -q "Map"; then # Skewness does not happen in Map phase,may be small files or yarn is slow. There is a fileter condition.
+                    if echo $fincont | grep -q "Map"; then # Skewness does not happen in Map phase,may be small files or yarn is slow. There is a filter condition.
                        echo "There may be small files in the Map Phase or reading the files takes long time. Check fin.txt and grab the attemptId. Check the Split sizing too."
                        echo "Check below taskid's"
                        echo
-                       cat fin.txt | fgrep -iw $fincont | awk '{print $4}'| cut -c 8- | sort > skewfin.txt
-                       cat start.txt | fgrep -iw $fincont | awk '{print $4}'| cut -c 8- | sort > skewstart.txt
+                       cat fin.txt | fgrep -iw $fincont | awk '{print $4}'| cut -c 8- | sort | uniq > skewfin.txt
+                       cat start.txt | fgrep -iw $fincont | awk '{print $4}'| cut -c 8- | sort | uniq > skewstart.txt
                        echo "Below taskid is not completed and might have small files issue or taking long time. Check the taskid"
                        echo
                        comm -23 skewstart.txt skewfin.txt 
                        rm -fr  skewstart.txt skewfin.txt    
                     else
                       echo "There may be skewness in this phase"
-                       cat fin.txt | fgrep -iw $fincont | awk '{print $4}'| cut -c 8- | sort > skewfin.txt
-                       cat start.txt | fgrep -iw $fincont | awk '{print $4}'| cut -c 8- | sort > skewstart.txt
+                       cat fin.txt | fgrep -iw $fincont | awk '{print $4}'| cut -c 8- | sort | uniq > skewfin.txt
+                       cat start.txt | fgrep -iw $fincont | awk '{print $4}'| cut -c 8- | sort  | uniq> skewstart.txt
                        echo "Below taskid is not completed and might have skewness"
                        echo
                        comm -23 skewstart.txt skewfin.txt 
